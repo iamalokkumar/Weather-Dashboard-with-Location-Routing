@@ -5,13 +5,29 @@ import { useParams } from 'react-router-dom';
 const WeatherPage = () => {
   const { city } = useParams();
   const [data, setData] = useState(null);
-  const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY';
+  const API_KEY = 'd441b757f1b03713008ab1081b89f0ef';
 
   useEffect(() => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`)
+    if (!city) return;
+    fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`)
       .then(res => res.json())
-      .then(setData)
-      .catch(console.error);
+      .then(data => {
+        if (!data || data.length === 0) {
+          throw new Error("City not found");
+        }
+
+        const { lat, lon } = data[0];
+
+       
+        return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+      })
+      .then(res => res.json())
+      .then(weather => {
+        setData(weather);
+      })
+      .catch(err => {
+        console.error("Error fetching weather:", err);
+      });
   }, [city]);
 
   if (!data) return <p>Loading...</p>;
@@ -32,7 +48,7 @@ const WeatherPage = () => {
         style={{ border: 0, marginTop: '1rem' }}
         loading="lazy"
         allowFullScreen
-        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${city}`}
+        src={`https://www.google.com/maps/embed/v1/place?key=dd1d3dd1dca26667a2fb72d078fe94b7&q=${city}`}
       ></iframe>
     </div>
   );
